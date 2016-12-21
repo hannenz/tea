@@ -10,6 +10,7 @@ VALAFLAGS = $(patsubst %, --pkg %, $(PACKAGES)) -X -fPIC -X -shared --library=$(
 SOURCES = src/TeaDocklet.vala\
 		src/TeaDockItem.vala\
 		src/TeaPreferences.vala\
+		src/TimerWindow.vala\
 		src/Timer.vala
 
 UIFILES =

@@ -1,6 +1,7 @@
 using Plank;
 using Gdk;
 using Notify;
+using Gtk;
 
 namespace Tea {
 
@@ -34,16 +35,42 @@ namespace Tea {
 		public override Gee.ArrayList<Gtk.MenuItem> get_menu_items() {
 			var items = new Gee.ArrayList<Gtk.MenuItem>();
 			
-			for (var i = 10; i > 0; i--) {
-				var item = create_menu_item("%u:00".printf(i), "", true);
-				item.activate.connect( () => {
-					Count = int.parse(item.label);
-					seconds = (int)Count * 60;
-				});
-				items.add(item);
-			}
+			/* for (var i = 10; i > 0; i--) { */
+			/* 	var item = create_menu_item("%u:00".printf(i), "", true); */
+			/* 	item.activate.connect( () => { */
+			/* 		Count = int.parse(item.label); */
+			/* 		seconds = (int)Count * 60; */
+			/* 	}); */
+			/* 	items.add(item); */
+			/* } */
+
+
+			var item = create_menu_item("Add timer", "", true);
+			item.activate.connect(add_timer);
+			items.add(item);
+
+			item = create_menu_item("Clear all timers", "", true);
+			item.activate.connect(clear_timers);
+			items.add(item);
+
 			return items;
 		}
+
+
+		private void clear_timers() {
+		}
+
+		private void add_timer() {
+			var dlg = new TimerWindow();
+			dlg.show();
+			var response = dlg.run();
+			if (response == ResponseType.APPLY) {
+				Logger.notification("New timer with %u".printf(dlg.seconds));
+			}
+			
+			dlg.destroy();
+		}
+
 
 
 		protected override AnimationType on_scrolled(Gdk.ScrollDirection dir, Gdk.ModifierType mod, uint32 event_time) {
