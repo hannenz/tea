@@ -10,6 +10,12 @@ namespace Tea {
 		public int seconds;
 		public Timer timer;
 
+		protected Gee.ArrayList<int?> timers;
+		protected int current_item = 0;
+		protected int max_items = 3;
+
+		private Gdk.Pixbuf icon_pixbuf;
+
 		public TeaDockItem.with_dockitem_file(GLib.File file) {
 			GLib.Object(Prefs: new TeaPreferences.with_file(file));
 		}
@@ -24,26 +30,39 @@ namespace Tea {
 
 			Icon = "resource://de/hannenz/tea/icons/tea.png";
 			Text = "Tea Timer";
-			CountVisible = true;
+			CountVisible = false;
 			Count = prefs.minutes;
 			ProgressVisible = false;
 			Progress = 0;
 
 			seconds = prefs.minutes * 60;
+			
+			timer = new Tea.Timer(7 * 60);
+			timers = new Gee.ArrayList<int?>();
+			try {
+				icon_pixbuf = new Gdk.Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png");
+			}
+			catch (Error e) {
+				warning("Error: " + e.message);
+			}
 		}
 
 		public override Gee.ArrayList<Gtk.MenuItem> get_menu_items() {
 			var items = new Gee.ArrayList<Gtk.MenuItem>();
 			
-			/* for (var i = 10; i > 0; i--) { */
-			/* 	var item = create_menu_item("%u:00".printf(i), "", true); */
-			/* 	item.activate.connect( () => { */
-			/* 		Count = int.parse(item.label); */
-			/* 		seconds = (int)Count * 60; */
-			/* 	}); */
-			/* 	items.add(item); */
-			/* } */
-
+			for (var i = timers.size; i > 0; i--) {
+				var sec = timers.get(i - 1);
+				var label = "%u:%02u".printf(sec / 60, sec % 60);
+				var item = create_menu_item(label, "", true);
+				var pos = i;
+				item.activate.connect( () => {
+					timer.stop();
+					timer.seconds = timers.get(pos - 1);
+					Logger.notification("Loaded timer with: %u".printf(timer.seconds));
+					reset_icon_buffer();
+				});
+				items.add(item);
+			}
 
 			var item = create_menu_item("Add timer", "", true);
 			item.activate.connect(add_timer);
@@ -56,6 +75,19 @@ namespace Tea {
 			return items;
 		}
 
+		protected override void draw_icon(Plank.Surface surface) {
+			Cairo.Context ctx = surface.Context;
+
+			Gdk.Pixbuf pb = icon_pixbuf.scale_simple(surface.Width, surface.Height, Gdk.InterpType.BILINEAR);
+			Gdk.cairo_set_source_pixbuf(ctx, pb, 0, 0);
+			ctx.paint();
+
+			ctx.set_source_rgb(0.3, 0.3, 0.3);
+			ctx.select_font_face("Adventure", Cairo.FontSlant.NORMAL, Cairo.FontWeight.BOLD);
+			ctx.set_font_size(12);
+			ctx.move_to(10, 30);
+			ctx.show_text(timer.get_remaining());
+		}
 
 		private void clear_timers() {
 		}
@@ -66,6 +98,11 @@ namespace Tea {
 			var response = dlg.run();
 			if (response == ResponseType.APPLY) {
 				Logger.notification("New timer with %u".printf(dlg.seconds));
+				timers.add(dlg.seconds);
+			}
+
+			while (timers.size > max_items) {
+				timers.remove_at(0);
 			}
 			
 			dlg.destroy();
@@ -121,6 +158,7 @@ namespace Tea {
 					timer.update.connect( (progress) => {
 						Progress = progress;
 						Text = "Tea Time in %s".printf(timer.get_remaining());
+						reset_icon_buffer();
 					});
 
 					timer.start();

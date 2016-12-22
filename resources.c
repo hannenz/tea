@@ -1,12 +1,12 @@
 #include <gio/gio.h>
 
 #if defined (__ELF__) && ( __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 6))
-# define SECTION __attribute__ ((section (".gresource.capture"), aligned (8)))
+# define SECTION __attribute__ ((section (".gresource.tea"), aligned (8)))
 #else
 # define SECTION
 #endif
 
-static const SECTION union { const guint8 data[100372]; const double alignment; void * const ptr;}  capture_resource_data = { {
+static const SECTION union { const guint8 data[100372]; const double alignment; void * const ptr;}  tea_resource_data = { {
   0x47, 0x56, 0x61, 0x72, 0x69, 0x61, 0x6e, 0x74, 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0x18, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x00, 
@@ -12556,9 +12556,9 @@ static const SECTION union { const guint8 data[100372]; const double alignment; 
   0x04, 0x00, 0x00, 0x00
 } };
 
-static GStaticResource static_resource = { capture_resource_data.data, sizeof (capture_resource_data.data), NULL, NULL, NULL };
-extern GResource *capture_get_resource (void);
-GResource *capture_get_resource (void)
+static GStaticResource static_resource = { tea_resource_data.data, sizeof (tea_resource_data.data), NULL, NULL, NULL };
+extern GResource *tea_get_resource (void);
+GResource *tea_get_resource (void)
 {
   return g_static_resource_get_resource (&static_resource);
 }

@@ -22,13 +22,17 @@ UIFILES =
 
 all: $(PRG)
 $(PRG): $(SOURCES) $(UIFILES)
-	glib-compile-resources capture.gresource.xml --target=resources.c --generate-source
+	glib-compile-resources tea.gresource.xml --target=resources.c --generate-source
 	$(VALAC) -o $(PRG) $(SOURCES) resources.c $(VALAFLAGS)
 
 install:
 	cp $(PRG) /usr/lib/x86_64-linux-gnu/plank/docklets/
-	# killall plank
 
+noautoplank:
+	gsettings set org.pantheon.desktop.cerbere monitored-processes "['wingpanel']"
+
+autoplank:
+	gsettings set org.pantheon.desktop.cerbere monitored-processes "['wingpanel', 'plank']"
 
 
 clean:

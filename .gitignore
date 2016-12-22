@@ -1,4 +1,5 @@
 *.so 
 *.so.vapi
 *.swp
+*.c
 resources.c

@@ -23,6 +23,9 @@ namespace Tea {
 
 			minutes_spin_button.value_changed.connect(update_seconds);
 			seconds_spin_button.value_changed.connect(update_seconds);
+			
+			minutes_spin_button.activates_default = true;
+			seconds_spin_button.activates_default = true;
 
 			var hbox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
 			hbox.pack_start(minutes_spin_button, false, true, 0);
@@ -35,6 +38,9 @@ namespace Tea {
 			add_button("_Cancel", ResponseType.CANCEL);
 			add_timer_button = add_button("_Add", ResponseType.APPLY);
 			add_timer_button.sensitive = false;
+			add_timer_button.can_default = true;
+
+			set_default_response(ResponseType.APPLY);
 			
 			show_all();
 		}
@@ -43,6 +49,5 @@ namespace Tea {
 			seconds = (int)minutes_spin_button.value * 60 + (int)seconds_spin_button.value; 
 			add_timer_button.sensitive = (seconds > 0);
 		}
-
 	}
 }
