@@ -38,6 +38,25 @@ namespace Tea {
 			seconds = prefs.minutes * 60;
 			
 			timer = new Tea.Timer(7 * 60);
+			timer.finished.connect( () => {
+				Logger.notification("*** TEA TIME! ***");
+				this.State = Plank.ItemState.URGENT;
+				try {
+					var notification = new Notify.Notification ("Tea Time!", "Enjoy", "dialog-information");
+					notification.set_urgency(Urgency.NORMAL);
+					notification.set_image_from_pixbuf(
+						new Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png")
+					);
+					notification.show ();
+				} catch (Error e) {
+					error ("Error: %s", e.message);
+				}
+			});
+			timer.update.connect( (progress) => {
+				Progress = progress;
+				Text = "Tea Time in %s".printf(timer.get_remaining());
+				reset_icon_buffer();
+			});
 			timers = new Gee.ArrayList<int?>();
 			try {
 				icon_pixbuf = new Gdk.Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png");
@@ -139,27 +158,6 @@ namespace Tea {
 				if (!timer.is_running()) {
 					ProgressVisible = true;
 					Progress = 0;
-
-					timer = new Tea.Timer(seconds);
-					timer.finished.connect( () => {
-						Logger.notification("*** TEA TIME! ***");
-						this.State = Plank.ItemState.URGENT;
-						try {
-							var notification = new Notify.Notification ("Tea Time!", "Enjoy", "dialog-information");
-							notification.set_urgency(Urgency.NORMAL);
-							notification.set_image_from_pixbuf(
-								new Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png")
-							);
-							notification.show ();
-						} catch (Error e) {
-							error ("Error: %s", e.message);
-						}
-					});
-					timer.update.connect( (progress) => {
-						Progress = progress;
-						Text = "Tea Time in %s".printf(timer.get_remaining());
-						reset_icon_buffer();
-					});
 
 					timer.start();
 				}
