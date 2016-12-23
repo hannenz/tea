@@ -133,21 +133,18 @@ namespace Tea {
 
 			switch (dir) {
 				case Gdk.ScrollDirection.UP:
-					Count++;
+					timer.seconds += 60;
 					break;
 
 				case Gdk.ScrollDirection.DOWN:
-					if (Count > 1) {
-						Count--;
+					if (timer.seconds > 60) {
+						timer.seconds -= 60;
 					}
 					break;
 			}
+			reset_icon_buffer();
 			timer.stop();
 			
-			seconds = (int)Count * 60;
-
-			unowned TeaPreferences prefs = (TeaPreferences) Prefs;
-			prefs.minutes = (int)Count;
 			return AnimationType.NONE;
 		}
 
