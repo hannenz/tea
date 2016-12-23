@@ -1,0 +1,10 @@
+<schemalist>
+	<schema id="de.hannenz.tea" path="/de/hannenz/tea/" gettext-domain="tea">
+		<key name="timers" type="s">
+			<default l10n="messages">"5:00,7:00,10:00"</default>
+			<summary>Stored timers</summary>
+			<description>Generated timers are stored here</description>
+		</key>
+	</schema>
+</schemalist>
+

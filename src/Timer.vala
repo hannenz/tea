@@ -2,7 +2,8 @@ namespace Tea {
 	
 	public enum TimerState {
 		STOPPED,
-		RUNNING
+		RUNNING,
+		PAUSED
 	}	
 
 	public class Timer {
@@ -24,6 +25,10 @@ namespace Tea {
 			state = TimerState.STOPPED;
 
 			updateInterval = 500;
+		}
+
+		public void load(int seconds) {
+			this.seconds = seconds;
 		}
 
 

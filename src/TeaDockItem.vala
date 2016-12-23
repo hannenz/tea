@@ -16,6 +16,8 @@ namespace Tea {
 
 		private Gdk.Pixbuf icon_pixbuf;
 
+		private GLib.Settings settings;
+
 		public TeaDockItem.with_dockitem_file(GLib.File file) {
 			GLib.Object(Prefs: new TeaPreferences.with_file(file));
 		}
@@ -25,6 +27,7 @@ namespace Tea {
 			Logger.DisplayLevel = LogLevel.NOTIFY;
 			
 			Notify.init("Tea");
+
 
 			unowned TeaPreferences prefs = (TeaPreferences) Prefs;
 
@@ -57,13 +60,47 @@ namespace Tea {
 				Text = "Tea Time in %s".printf(timer.get_remaining());
 				reset_icon_buffer();
 			});
+
 			timers = new Gee.ArrayList<int?>();
+
+			settings = new GLib.Settings("de.hannenz.tea");
+			foreach (string timer in settings.get_string("timers").split(",")) {
+				int timer_seconds = string_to_seconds(timer);
+				timers.add(timer_seconds);
+			}
 			try {
 				icon_pixbuf = new Gdk.Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png");
 			}
 			catch (Error e) {
 				warning("Error: " + e.message);
 			}
+		}
+
+		public int string_to_seconds(string str) {
+			MatchInfo match_info;
+			Regex regex = /(\d+):(\d{2})/;
+
+			if (!regex.match(str, 0, out match_info)) {
+				return -1;
+			}
+			if (match_info.get_match_count() != 3) {
+				return -1;
+			}
+
+			return (int.parse(match_info.fetch(1)) * 60 + int.parse(match_info.fetch(2)));
+		}
+
+		protected void save_timers() {
+			string str = "";
+			for (var i = 0; i < timers.size; i++) {
+				int seconds = timers.get(i);
+				var time = "%u:%02u".printf(seconds / 60, seconds % 60);
+				str += time;
+				if ( i < timers.size - 1) {
+					str += ",";
+				}
+			}
+			settings.set_string("timers", str);
 		}
 
 		public override Gee.ArrayList<Gtk.MenuItem> get_menu_items() {
@@ -77,7 +114,6 @@ namespace Tea {
 				item.activate.connect( () => {
 					timer.stop();
 					timer.seconds = timers.get(pos - 1);
-					Logger.notification("Loaded timer with: %u".printf(timer.seconds));
 					reset_icon_buffer();
 				});
 				items.add(item);
@@ -109,6 +145,8 @@ namespace Tea {
 		}
 
 		private void clear_timers() {
+			timers.clear();
+			save_timers();
 		}
 
 		private void add_timer() {
@@ -116,12 +154,16 @@ namespace Tea {
 			dlg.show();
 			var response = dlg.run();
 			if (response == ResponseType.APPLY) {
-				Logger.notification("New timer with %u".printf(dlg.seconds));
-				timers.add(dlg.seconds);
-			}
 
-			while (timers.size > max_items) {
-				timers.remove_at(0);
+				timers.add(dlg.seconds);
+
+				while (timers.size > max_items) {
+					timers.remove_at(0);
+				}
+
+				save_timers();
+				timer.load(dlg.seconds);
+				reset_icon_buffer();
 			}
 			
 			dlg.destroy();
