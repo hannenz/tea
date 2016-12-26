@@ -88,6 +88,14 @@ namespace Tea {
 
 		}
 
+
+
+		/**
+		  * Convert a "mm:ss" string into nr of seconds
+		  *
+		  * @param string
+		  * @return int
+		  */
 		public int string_to_seconds(string str) {
 			MatchInfo match_info;
 			Regex regex = /(\d+):(\d{2})/;
@@ -102,22 +110,36 @@ namespace Tea {
 			return (int.parse(match_info.fetch(1)) * 60 + int.parse(match_info.fetch(2)));
 		}
 
+
+
+		/**
+		  * Save the list of timers (to GSettings)
+		  *
+		  * @return void
+		  */
 		protected void save_timers() {
+
 			string str = "";
 			for (var i = 0; i < timers.size; i++) {
+
 				int seconds = timers.get(i);
-				var time = "%u:%02u".printf(seconds / 60, seconds % 60);
-				str += time;
-				if ( i < timers.size - 1) {
-					str += ",";
-				}
+				str += "%u:%02u%c".printf(seconds / 60, seconds % 60, (i < timers.size - 1) ? ',' : ' ');
 			}
 			settings.set_string("timers", str);
 		}
 
+
+
+		/**
+		  * Generate menu items for the docklet's right click menu
+		  *
+		  * @return Gee.ArrayList<Gtk.MenuItem>
+		  */
 		public override Gee.ArrayList<Gtk.MenuItem> get_menu_items() {
+
 			var items = new Gee.ArrayList<Gtk.MenuItem>();
 			
+			// Populate menu with saved timers
 			for (var i = timers.size; i > 0; i--) {
 				var sec = timers.get(i - 1);
 				var label = "%u:%02u".printf(sec / 60, sec % 60);
@@ -131,6 +153,7 @@ namespace Tea {
 				items.add(item);
 			}
 
+			// Additional options: Add timer, clear saved timers
 			var item = create_menu_item("Add timer", "", true);
 			item.activate.connect(add_timer);
 			items.add(item);
@@ -142,6 +165,13 @@ namespace Tea {
 			return items;
 		}
 
+
+
+		/**
+		  * Re-draw the icon
+		  *
+		  * @return void
+		  */
 		protected override void draw_icon(Plank.Surface surface) {
 			Cairo.Context ctx = surface.Context;
 
@@ -156,11 +186,25 @@ namespace Tea {
 			ctx.show_text(timer.get_remaining());
 		}
 
+
+
+		/**
+		  * Clear the stored timers
+		  *
+		  * @return void
+		  */
 		private void clear_timers() {
 			timers.clear();
 			save_timers();
 		}
 
+
+
+		/**
+		  * Add a timer
+		  *
+		  * @return void
+		  */
 		private void add_timer() {
 			var dlg = new TimerWindow();
 			dlg.show();
@@ -183,25 +227,14 @@ namespace Tea {
 
 
 
-		protected override AnimationType on_scrolled(Gdk.ScrollDirection dir, Gdk.ModifierType mod, uint32 event_time) {
-
-			switch (dir) {
-				case Gdk.ScrollDirection.UP:
-					timer.seconds += 60;
-					break;
-
-				case Gdk.ScrollDirection.DOWN:
-					if (timer.seconds > 60) {
-						timer.seconds -= 60;
-					}
-					break;
-			}
-			reset_icon_buffer();
-			timer.stop();
-			
-			return AnimationType.NONE;
-		}
-
+		/**
+		  * Callback on click: Start / Stop timer
+		  *
+		  * @param Gdk.ScrollDirection dir
+		  * @param Gdk.ModifierType mod
+		  * @param uint32 event_time
+		  * @return AnimationType
+		  */
 		protected override AnimationType on_clicked(PopupButton button, Gdk.ModifierType mod, uint32 event_time) {
 
 			if (button == PopupButton.LEFT) {
@@ -218,6 +251,32 @@ namespace Tea {
 				}
 				return AnimationType.BOUNCE;
 			}
+			return AnimationType.NONE;
+		}
+		/**
+		  * Callback on scroll: In-/Decrement timer value by 1 minute
+		  *
+		  * @param Gdk.ScrollDirection dir
+		  * @param Gdk.ModifierType mod
+		  * @param uint32 event_time
+		  * @return AnimationType
+		  */
+		protected override AnimationType on_scrolled(Gdk.ScrollDirection dir, Gdk.ModifierType mod, uint32 event_time) {
+
+			switch (dir) {
+				case Gdk.ScrollDirection.UP:
+					timer.seconds += 60;
+					break;
+
+				case Gdk.ScrollDirection.DOWN:
+					if (timer.seconds > 60) {
+						timer.seconds -= 60;
+					}
+					break;
+			}
+			reset_icon_buffer();
+			timer.stop();
+			
 			return AnimationType.NONE;
 		}
 	}
