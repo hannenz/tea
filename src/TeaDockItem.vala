@@ -23,57 +23,69 @@ namespace Tea {
 		}
 
 		construct {
+			// Initializations
 			Logger.initialize("tea");
 			Logger.DisplayLevel = LogLevel.NOTIFY;
 			
 			Notify.init("Tea");
 
+			settings = new GLib.Settings("de.hannenz.tea");
 
+
+			// Get Docklet preferences (from the docklet's .desktop file
 			unowned TeaPreferences prefs = (TeaPreferences) Prefs;
 
 			Icon = "resource://de/hannenz/tea/icons/tea.png";
-			Text = "Tea Timer";
-			CountVisible = false;
-			Count = prefs.minutes;
-			ProgressVisible = false;
-			Progress = 0;
-
-			seconds = prefs.minutes * 60;
-			
-			timer = new Tea.Timer(7 * 60);
-			timer.finished.connect( () => {
-				Logger.notification("*** TEA TIME! ***");
-				this.State = Plank.ItemState.URGENT;
-				try {
-					var notification = new Notify.Notification ("Tea Time!", "Enjoy", "dialog-information");
-					notification.set_urgency(Urgency.NORMAL);
-					notification.set_image_from_pixbuf(
-						new Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png")
-					);
-					notification.show ();
-				} catch (Error e) {
-					error ("Error: %s", e.message);
-				}
-			});
-			timer.update.connect( (progress) => {
-				Progress = progress;
-				Text = "Tea Time in %s".printf(timer.get_remaining());
-				reset_icon_buffer();
-			});
-
-			timers = new Gee.ArrayList<int?>();
-
-			settings = new GLib.Settings("de.hannenz.tea");
-			foreach (string timer in settings.get_string("timers").split(",")) {
-				int timer_seconds = string_to_seconds(timer);
-				timers.add(timer_seconds);
-			}
 			try {
 				icon_pixbuf = new Gdk.Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png");
 			}
 			catch (Error e) {
 				warning("Error: " + e.message);
 			}
+			Text = "Tea Timer";
+			/* CountVisible = false; */
+			/* Count = prefs.minutes; */
+			ProgressVisible = false;
+			Progress = 0;
+
+			seconds = prefs.minutes * 60;
+			
+			// A list of timers
+			timers = new Gee.ArrayList<int?>();
+			foreach (string timer in settings.get_string("timers").split(",")) {
+				int timer_seconds = string_to_seconds(timer);
+				timers.add(timer_seconds);
+			}
+			
+
+			// Setup a new timer
+			timer = new Tea.Timer(7 * 60);
+			// What happens when the timer has finished
+			timer.finished.connect( () => {
+				Logger.notification("*** TEA TIME! ***");
+				this.State = Plank.ItemState.URGENT;
+				try {
+					// Show a desktop notification
+					var notification = new Notify.Notification ("Tea Time!", "Enjoy", "dialog-information");
+					notification.set_urgency(Urgency.NORMAL);
+					notification.set_image_from_pixbuf(
+						new Pixbuf.from_resource("/de/hannenz/tea/icons/tea.png")
+					);
+					notification.show ();
+				} 
+				catch (Error e) {
+					error ("Error: %s", e.message);
+				}
+			});
+
+			// Update time display and progress
+			timer.update.connect( (progress) => {
+				Progress = progress;
+				Text = "Tea Time in %s".printf(timer.get_remaining());
+				reset_icon_buffer();
+			});
+
+
 		}
 
 		public int string_to_seconds(string str) {
